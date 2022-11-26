@@ -1,8 +1,10 @@
 package com.dmdev.integration;
 
-import com.dmdev.util.ConnectionManager;
+import com.dmdev.util.ConnectionPool;
 import lombok.SneakyThrows;
 import org.junit.jupiter.api.BeforeEach;
+
+import java.util.concurrent.TimeUnit;
 
 public abstract class IntegrationTestBase {
 
@@ -10,7 +12,7 @@ public abstract class IntegrationTestBase {
     private static final String CREATE_SQL = """
             CREATE TABLE IF NOT EXISTS users
             (
-                id INT AUTO_INCREMENT PRIMARY KEY ,
+                id SERIAL PRIMARY KEY ,
                 name VARCHAR(64),
                 birthday DATE NOT NULL ,
                 email VARCHAR(64) NOT NULL UNIQUE ,
@@ -31,8 +33,9 @@ public abstract class IntegrationTestBase {
     @BeforeEach
     @SneakyThrows
     void prepareDatabase() {
-        try (var connection = ConnectionManager.get();
-             var statement = connection.createStatement()) {
+        try (var connection = ConnectionPool.get();
+             var statement = connection.createStatement())
+        {
             statement.execute(CLEAN_SQL);
             statement.execute(CREATE_SQL);
             statement.execute(INSERT_SQL);
