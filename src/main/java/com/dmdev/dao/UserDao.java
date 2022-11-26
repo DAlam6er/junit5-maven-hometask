@@ -3,7 +3,7 @@ package com.dmdev.dao;
 import com.dmdev.entity.Gender;
 import com.dmdev.entity.Role;
 import com.dmdev.entity.User;
-import com.dmdev.util.ConnectionManager;
+import com.dmdev.util.ConnectionPool;
 import lombok.NoArgsConstructor;
 import lombok.SneakyThrows;
 
@@ -33,11 +33,12 @@ public class UserDao implements Dao<Integer, User> {
                 role,
                 gender
             FROM users
-            """;
+    """;
     private static final String GET_BY_ID_SQL = GET_ALL_SQL + " WHERE id = ?";
-    private static final String GET_BY_EMAIL_AND_PASSWORD_SQL = GET_ALL_SQL + " WHERE email = ? AND password = ?";
+    private static final String GET_BY_EMAIL_AND_PASSWORD_SQL =
+        GET_ALL_SQL + " WHERE email = ? AND password = ?";
     private static final String SAVE_SQL =
-            "INSERT INTO users (name, birthday, email, password, role, gender) VALUES (?, ?, ?, ?, ?, ?)";
+        "INSERT INTO users (name, birthday, email, password, role, gender) VALUES (?, ?, ?, ?, ?, ?)";
     private static final String DELETE_BY_ID_SQL = "DELETE FROM users WHERE id = ?";
     private static final String UPDATE_BY_ID_SQL = """
             UPDATE users
@@ -48,7 +49,7 @@ public class UserDao implements Dao<Integer, User> {
                 role = ?,
                 gender = ?
             WHERE id = ?
-            """;
+    """;
 
     public static UserDao getInstance() {
         return INSTANCE;
@@ -57,7 +58,7 @@ public class UserDao implements Dao<Integer, User> {
     @Override
     @SneakyThrows
     public List<User> findAll() {
-        try (var connection = ConnectionManager.get();
+        try (var connection = ConnectionPool.get();
              var preparedStatement = connection.prepareStatement(GET_ALL_SQL)) {
             var resultSet = preparedStatement.executeQuery();
             List<User> users = new ArrayList<>();
@@ -72,7 +73,7 @@ public class UserDao implements Dao<Integer, User> {
     @Override
     @SneakyThrows
     public Optional<User> findById(Integer id) {
-        try (var connection = ConnectionManager.get();
+        try (var connection = ConnectionPool.get();
              var preparedStatement = connection.prepareStatement(GET_BY_ID_SQL)) {
             preparedStatement.setObject(1, id);
 
@@ -86,7 +87,7 @@ public class UserDao implements Dao<Integer, User> {
     @Override
     @SneakyThrows
     public User save(User entity) {
-        try (var connection = ConnectionManager.get();
+        try (var connection = ConnectionPool.get();
              var preparedStatement = connection.prepareStatement(SAVE_SQL, RETURN_GENERATED_KEYS)) {
             prepareStatementToUpsert(preparedStatement, entity);
 
@@ -102,7 +103,7 @@ public class UserDao implements Dao<Integer, User> {
 
     @SneakyThrows
     public Optional<User> findByEmailAndPassword(String email, String password) {
-        try (var connection = ConnectionManager.get();
+        try (var connection = ConnectionPool.get();
              var preparedStatement = connection.prepareStatement(GET_BY_EMAIL_AND_PASSWORD_SQL)) {
             preparedStatement.setString(1, email);
             preparedStatement.setString(2, password);
@@ -117,7 +118,7 @@ public class UserDao implements Dao<Integer, User> {
     @Override
     @SneakyThrows
     public boolean delete(Integer id) {
-        try (var connection = ConnectionManager.get();
+        try (var connection = ConnectionPool.get();
              var preparedStatement = connection.prepareStatement(DELETE_BY_ID_SQL)) {
             preparedStatement.setObject(1, id);
 
@@ -128,7 +129,7 @@ public class UserDao implements Dao<Integer, User> {
     @Override
     @SneakyThrows
     public void update(User entity) {
-        try (var connection = ConnectionManager.get();
+        try (var connection = ConnectionPool.get();
              var preparedStatement = connection.prepareStatement(UPDATE_BY_ID_SQL)) {
             prepareStatementToUpsert(preparedStatement, entity);
             preparedStatement.setObject(7, entity.getId());
