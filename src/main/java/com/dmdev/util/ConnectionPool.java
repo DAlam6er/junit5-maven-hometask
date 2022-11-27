@@ -50,7 +50,7 @@ public class ConnectionPool
                 new Class[]{Connection.class},
                 (proxy, method, args) ->
                      method.getName().equals("close")
-                        ? pool.add(connection)
+                        ? pool.add((Connection) proxy)
                         : method.invoke(connection, args)
             );
             pool.add(proxyConnection);
@@ -61,11 +61,7 @@ public class ConnectionPool
     @SneakyThrows
     public static Connection get()
     {
-        var conn = pool.poll(1, TimeUnit.SECONDS);
-        if (conn == null) {
-            conn = open();
-        }
-        return conn;
+        return pool.poll(1, TimeUnit.SECONDS);
     }
 
     @SneakyThrows
