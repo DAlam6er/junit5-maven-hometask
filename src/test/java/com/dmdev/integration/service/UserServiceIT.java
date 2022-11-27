@@ -26,7 +26,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
 @TestMethodOrder(MethodOrderer.Random.class)
-public class UserServiceIT_ extends IntegrationTestBase
+public class UserServiceIT extends IntegrationTestBase
 {
     UserService userService;
 

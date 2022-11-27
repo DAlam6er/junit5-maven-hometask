@@ -6,8 +6,6 @@ import com.dmdev.entity.Role;
 import com.dmdev.entity.User;
 import com.dmdev.integration.IntegrationTestBase;
 import com.dmdev.integration.util.TestObjectUtils;
-import com.dmdev.util.ConnectionPool;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -20,10 +18,8 @@ import static com.dmdev.integration.util.TestObjectUtils.*;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
-public class UserDaoITCase extends IntegrationTestBase
+public class UserDaoIT extends IntegrationTestBase
 {
-
-
     /*
      * Почти всегда в тестах в качестве полей выносится объект тестируемого класса:
      * - добавляет наглядности и прозрачности, что именно тестируем
@@ -123,15 +119,9 @@ public class UserDaoITCase extends IntegrationTestBase
         assertEquals(expectedUser, actualUser);
     }
 
-    @AfterAll
-    static void closeConnectionPool()
-    {
-        ConnectionPool.close();
-    }
-
     /**
      *
-     * @return arguments: email, password
+     * @return arguments: email, password, expected error code
      */
     private static Stream<Arguments> getArgumentsToFind()
     {

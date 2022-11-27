@@ -4,15 +4,13 @@ import com.dmdev.util.ConnectionPool;
 import lombok.SneakyThrows;
 import org.junit.jupiter.api.BeforeEach;
 
-import java.util.concurrent.TimeUnit;
-
 public abstract class IntegrationTestBase {
 
     private static final String CLEAN_SQL = "DROP TABLE IF EXISTS users;";
     private static final String CREATE_SQL = """
             CREATE TABLE IF NOT EXISTS users
             (
-                id SERIAL PRIMARY KEY ,
+                id INT AUTO_INCREMENT PRIMARY KEY ,
                 name VARCHAR(64),
                 birthday DATE NOT NULL ,
                 email VARCHAR(64) NOT NULL UNIQUE ,
