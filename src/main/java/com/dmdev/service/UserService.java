@@ -3,40 +3,40 @@ package com.dmdev.service;
 import com.dmdev.dao.UserDao;
 import com.dmdev.dto.CreateUserDto;
 import com.dmdev.dto.UserDto;
-import com.dmdev.entity.User;
 import com.dmdev.exception.ValidationException;
 import com.dmdev.mapper.CreateUserMapper;
 import com.dmdev.mapper.UserMapper;
-import com.dmdev.util.ConnectionPool;
 import com.dmdev.validator.CreateUserValidator;
-import lombok.NoArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 
 import java.util.Optional;
 
-import static lombok.AccessLevel.PRIVATE;
+/*
+ * Чтобы написать Unit тест, нам необходимо управлять механизмом внедрения зависимостей
+ * с помощью Mockito mocks/spies.
+ * Это невозможно сделать для final полей, которые сразу же инициализируются:
+ * Java разрешает инициализировать final поля/переменные/параметры только 1 раз.
+ *
+ * По вышеописанным причинам произошел рефакторинг UserService
+ */
+@RequiredArgsConstructor
+public class UserService
+{
+    private final CreateUserValidator createUserValidator;
+    private final UserDao userDao;
+    private final CreateUserMapper createUserMapper;
+    private final UserMapper userMapper;
 
-@NoArgsConstructor(access = PRIVATE)
-public class UserService {
-
-    private static final UserService INSTANCE = new UserService();
-
-    private final CreateUserValidator createUserValidator = CreateUserValidator.getInstance();
-    private final UserDao userDao = UserDao.getInstance();
-    private final CreateUserMapper createUserMapper = CreateUserMapper.getInstance();
-    private final UserMapper userMapper = UserMapper.getInstance();
-
-    public static UserService getInstance() {
-        return INSTANCE;
-    }
-
-    public Optional<UserDto> login(String email, String password) {
+    public Optional<UserDto> login(String email, String password)
+    {
         return userDao.findByEmailAndPassword(email, password)
-                .map(userMapper::map);
+            .map(userMapper::map);
     }
 
     @SneakyThrows
-    public UserDto create(CreateUserDto userDto) {
+    public UserDto create(CreateUserDto userDto)
+    {
         var validationResult = createUserValidator.validate(userDto);
         if (!validationResult.isValid()) {
             throw new ValidationException(validationResult.getErrors());
