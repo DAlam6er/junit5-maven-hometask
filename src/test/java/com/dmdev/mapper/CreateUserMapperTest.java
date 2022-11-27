@@ -1,40 +1,40 @@
 package com.dmdev.mapper;
 
 import com.dmdev.dto.CreateUserDto;
-import com.dmdev.util.LocalDateFormatter;
+import com.dmdev.entity.Gender;
+import com.dmdev.entity.Role;
+import com.dmdev.entity.User;
 import org.junit.jupiter.api.Test;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertAll;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import java.time.LocalDate;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 public class CreateUserMapperTest
 {
-    private static final String USER_NAME = "Ivan";
-    private static final String USER_BIRTHDAY = "1991-02-26";
-
-    CreateUserMapper createUserMapper = CreateUserMapper.getInstance();
-    CreateUserDto createUserDto;
+    private final CreateUserMapper mapper = CreateUserMapper.getInstance();
 
     @Test
-    void shouldReturnUserDto()
+    void shouldMapAllFieldsCorrectly()
     {
-        createUserDto = CreateUserDto.builder()
-            .name(USER_NAME)
-            .birthday(USER_BIRTHDAY)
+        CreateUserDto dto = CreateUserDto.builder()
+            .name("Test")
+            .birthday("2000-01-02")
+            .email("test@gmail.com")
+            .password("pass")
+            .gender(Gender.MALE.name())
+            .role(Role.USER.name())
             .build();
 
-        var user = createUserMapper.map(createUserDto);
-        assertAll(
-            () -> assertThat(user.getName()).isEqualTo(USER_NAME),
-            () -> assertThat(user.getBirthday()).isEqualTo(LocalDateFormatter.format(USER_BIRTHDAY)),
-            () -> assertThat(user.getRole()).isNull()
-        );
-    }
+        User actualResult = mapper.map(dto);
 
-    @Test
-    void shouldThrowNPEIfUserIsNull()
-    {
-        assertThrows(NullPointerException.class, () -> createUserMapper.map(createUserDto));
+        assertAll(
+            () -> assertEquals(dto.getName(), actualResult.getName()),
+            () -> assertEquals(LocalDate.of(2000, 1, 2), actualResult.getBirthday()),
+            () -> assertEquals(dto.getEmail(), actualResult.getEmail()),
+            () -> assertEquals(dto.getPassword(), actualResult.getPassword()),
+            () -> assertSame(Gender.valueOf(dto.getGender()), actualResult.getGender()),
+            () -> assertSame(Role.valueOf(dto.getRole()), actualResult.getRole())
+        );
     }
 }

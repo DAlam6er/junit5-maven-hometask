@@ -15,7 +15,7 @@ import static org.mockito.Mockito.doReturn;
 @ExtendWith({
     MockitoExtension.class
 })
-public class ValidationResultTest
+public class ValidationResultTestOld
 {
     private static final String VALID_LOCAL_DATE = "1991-02-26";
     private static final String INVALID_LOCAL_DATE = "Invalid local date";
