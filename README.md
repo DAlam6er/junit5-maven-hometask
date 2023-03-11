@@ -1,4 +1,4 @@
-# junit5-study
+# junit5-maven-study
 
 Описание:
 - Покрыто Unit и Integration тестами не менее 90% кода
