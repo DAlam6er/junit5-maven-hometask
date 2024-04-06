@@ -3,9 +3,11 @@ package com.dmdev.service;
 import com.dmdev.dao.UserDao;
 import com.dmdev.dto.CreateUserDto;
 import com.dmdev.dto.UserDto;
+import com.dmdev.exception.ValidationException;
 import com.dmdev.mapper.CreateUserMapper;
 import com.dmdev.mapper.UserMapper;
 import com.dmdev.validator.CreateUserValidator;
+import com.dmdev.validator.Error;
 import com.dmdev.validator.ValidationResult;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -18,6 +20,7 @@ import java.util.Optional;
 import static com.dmdev.integration.util.TestObjectUtils.IVAN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.verify;
@@ -66,5 +69,15 @@ public class UserServiceTest
         verify(createUserValidator).validate(createUserDto);
         verify(createUserMapper).map(createUserDto);
         verify(userDao).save(any());
+    }
+
+    @Test
+    void shouldThrowValidationExceptionWhenValidationFails() {
+        var createUserDto = CreateUserDto.builder().build();
+
+        var validationResult = new ValidationResult();
+        validationResult.add(Error.of("invalid.data", "Invalid data"));
+        doReturn(validationResult).when(createUserValidator).validate(createUserDto);
+        assertThrows(ValidationException.class, () -> userService.create(createUserDto));
     }
 }
