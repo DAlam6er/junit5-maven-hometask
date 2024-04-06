@@ -79,9 +79,4 @@ public class ConnectionPool
             sourceConnection.close();
         }
     }
-
-    public static void getPoolSize()
-    {
-        System.out.println("CurrentPool size: " + pool.size());
-    }
 }
