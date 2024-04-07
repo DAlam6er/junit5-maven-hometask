@@ -23,55 +23,75 @@ import java.util.stream.Stream;
 
 import static com.dmdev.integration.util.TestObjectUtils.IVAN;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertAll;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @TestMethodOrder(MethodOrderer.Random.class)
-public class UserServiceIT extends IntegrationTestBase
-{
-    UserService userService;
+class UserServiceIT extends IntegrationTestBase {
+  UserService userService;
 
-    @BeforeEach
-    void init()
-    {
-        userService = new UserService(
-            CreateUserValidator.getInstance(),
-            UserDao.getInstance(),
-            CreateUserMapper.getInstance(),
-            UserMapper.getInstance()
-        );
-    }
+  /**
+   * @return arguments: email, password
+   */
+  private static Stream<Arguments> getArgumentsForLogin() {
+    return Stream.of(
+        Arguments.of("dummy", "dummy"),
+        Arguments.of(IVAN.getEmail(), "dummy"),
+        Arguments.of("dummy", IVAN.getPassword())
+    );
+  }
 
-    @Test
-    void shouldLoginSuccessfully()
-    {
-        var actualResult = userService.login(IVAN.getEmail(), IVAN.getPassword());
+  /**
+   * @return arguments: birthday, role, gender, expectedErrorCode
+   */
+  private static Stream<Arguments> getWrongArgumentsForEntityCreate() {
+    return Stream.of(
+        Arguments.of("09-25-2000", Role.ADMIN.name(), Gender.FEMALE.name(), "invalid.birthday"),
+        Arguments.of("2000-09-25", Role.ADMIN.name(), "dummy", "invalid.gender"),
+        Arguments.of("2000-09-25", "dummy", Gender.MALE.name(), "invalid.role")
+    );
+  }
 
-        assertAll(
-            () -> assertThat(actualResult).isPresent(),
-            () -> assertEquals(actualResult.orElse(UserDto.builder().build()).getEmail(), IVAN.getEmail())
-        );
+  @BeforeEach
+  void init() {
+    userService = new UserService(
+        CreateUserValidator.getInstance(),
+        UserDao.getInstance(),
+        CreateUserMapper.getInstance(),
+        UserMapper.getInstance()
+    );
+  }
 
-    }
+  @Test
+  void shouldLoginSuccessfully() {
+    var actualResult = userService.login(IVAN.getEmail(), IVAN.getPassword());
 
-    @ParameterizedTest
-    @MethodSource("getArgumentsForLogin")
-    void shouldNotLoginIfPasswordOrEmailIsNotCorrect(String email, String password)
-    {
-        var actualResult = userService.login(email, password);
-        assertThat(actualResult).isEmpty();
-    }
+    assertAll(
+        () -> assertThat(actualResult).isPresent(),
+        () -> assertEquals(actualResult.orElse(UserDto.builder().build()).getEmail(), IVAN.getEmail())
+    );
 
-    @Test
-    void shouldCreateCorrectEntity()
-    {
-        var userToCreate = CreateUserDto.builder()
-            .name("Nikolay")
-            .birthday("1991-02-26")
-            .email("nikolay@gmail.com")
-            .password("123")
-            .role("USER")
-            .gender("MALE")
-            .build();
+  }
+
+  @ParameterizedTest
+  @MethodSource("getArgumentsForLogin")
+  void shouldNotLoginIfPasswordOrEmailIsNotCorrect(String email, String password) {
+    var actualResult = userService.login(email, password);
+    assertThat(actualResult).isEmpty();
+  }
+
+  @Test
+  void shouldCreateCorrectEntity() {
+    var userToCreate = CreateUserDto.builder()
+        .name("Nikolay")
+        .birthday("1991-02-26")
+        .email("nikolay@gmail.com")
+        .password("123")
+        .role("USER")
+        .gender("MALE")
+        .build();
 
 /*        var userDto = UserDto.builder()
             .id(TestObjectUtils.getMaxId() + 1)
@@ -83,53 +103,26 @@ public class UserServiceIT extends IntegrationTestBase
             .build();
         assertThat(userService.create(userToCreate)).isEqualTo(userDto);*/
 
-        var createdUser = userService.create(userToCreate);
+    var createdUser = userService.create(userToCreate);
 
-        assertNotNull(createdUser.getId());
-    }
+    assertNotNull(createdUser.getId());
+  }
 
-    @ParameterizedTest
-    @MethodSource("getWrongArgumentsForEntityCreate")
-    void shouldThrowValidationExceptionIfEntityInvalid
-        (String birthday, String role, String gender, String expectedErrorCode)
-    {
-        var userToCreate = CreateUserDto.builder()
-            .name("Nikolay")
-            .birthday(birthday)
-            .email("nikolay@gmail.com")
-            .password("123")
-            .role(role)
-            .gender(gender)
-            .build();
+  @ParameterizedTest
+  @MethodSource("getWrongArgumentsForEntityCreate")
+  void shouldThrowValidationExceptionIfEntityInvalid
+      (String birthday, String role, String gender, String expectedErrorCode) {
+    var userToCreate = CreateUserDto.builder()
+        .name("Nikolay")
+        .birthday(birthday)
+        .email("nikolay@gmail.com")
+        .password("123")
+        .role(role)
+        .gender(gender)
+        .build();
 
-        var actualException = assertThrows(ValidationException.class, () -> userService.create(userToCreate));
-        assertThat(actualException.getErrors()).hasSize(1);
-        assertThat(actualException.getErrors().get(0).getCode()).isEqualTo(expectedErrorCode);
-    }
-
-    /**
-     *
-     * @return arguments: email, password
-     */
-    private static Stream<Arguments> getArgumentsForLogin()
-    {
-        return Stream.of(
-            Arguments.of("dummy", "dummy"),
-            Arguments.of(IVAN.getEmail(), "dummy"),
-            Arguments.of("dummy", IVAN.getPassword())
-        );
-    }
-
-    /**
-     *
-     * @return arguments: birthday, role, gender, expectedErrorCode
-     */
-    private static Stream<Arguments> getWrongArgumentsForEntityCreate()
-    {
-        return Stream.of(
-            Arguments.of("09-25-2000", Role.ADMIN.name(), Gender.FEMALE.name(), "invalid.birthday"),
-            Arguments.of("2000-09-25", Role.ADMIN.name(), "dummy", "invalid.gender"),
-            Arguments.of("2000-09-25", "dummy", Gender.MALE.name(), "invalid.role")
-        );
-    }
+    var actualException = assertThrows(ValidationException.class, () -> userService.create(userToCreate));
+    assertThat(actualException.getErrors()).hasSize(1);
+    assertThat(actualException.getErrors().get(0).getCode()).isEqualTo(expectedErrorCode);
+  }
 }

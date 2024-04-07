@@ -13,70 +13,66 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.TimeUnit;
 
 @UtilityClass
-public class ConnectionPool
-{
-    private static final String URL_KEY = "db.url";
-    private static final String USER_KEY = "db.user";
-    private static final String PASSWORD_KEY = "db.password";
-    private static final String DRIVER_KEY = "db.driver";
-    private static final Integer DEFAULT_POOL_SIZE = 10;
-    private static final String POOL_SIZE_KEY = "db.pool.size";
+public class ConnectionPool {
+  private static final String URL_KEY = "db.url";
+  private static final String USER_KEY = "db.user";
+  private static final String PASSWORD_KEY = "db.password";
+  private static final String DRIVER_KEY = "db.driver";
+  private static final Integer DEFAULT_POOL_SIZE = 10;
+  private static final String POOL_SIZE_KEY = "db.pool.size";
 
-    private static BlockingQueue<Connection> pool;
-    private static List<Connection> sourceConnections;
+  private static BlockingQueue<Connection> pool;
+  private static List<Connection> sourceConnections;
 
-    static {
-        loadDriver();
-        initConnectionPool();
+  static {
+    loadDriver();
+    initConnectionPool();
+  }
+
+  @SneakyThrows
+  private static void loadDriver() {
+    Class.forName(PropertiesUtil.get(DRIVER_KEY));
+  }
+
+  private static void initConnectionPool() {
+    var poolSize = PropertiesUtil.get(POOL_SIZE_KEY);
+    var size = poolSize == null ? DEFAULT_POOL_SIZE : Integer.parseInt(poolSize);
+    pool = new ArrayBlockingQueue<>(size);
+    sourceConnections = new ArrayList<>(size);
+
+    for (int i = 0; i < size; i++) {
+      var connection = open();
+
+      var proxyConnection = (Connection) Proxy.newProxyInstance(
+          ConnectionPool.class.getClassLoader(),
+          new Class[]{Connection.class},
+          (proxy, method, args) ->
+              method.getName().equals("close")
+                  ? pool.add((Connection) proxy)
+                  : method.invoke(connection, args)
+      );
+      pool.add(proxyConnection);
+      sourceConnections.add(connection);
     }
+  }
 
-    @SneakyThrows
-    private static void loadDriver() {
-        Class.forName(PropertiesUtil.get(DRIVER_KEY));
+  @SneakyThrows
+  private static Connection open() {
+    return DriverManager.getConnection(
+        PropertiesUtil.get(URL_KEY),
+        PropertiesUtil.get(USER_KEY),
+        PropertiesUtil.get(PASSWORD_KEY));
+  }
+
+  @SneakyThrows
+  public static Connection get() {
+    return pool.poll(1, TimeUnit.SECONDS);
+  }
+
+  @SneakyThrows
+  public static void close() {
+    for (Connection sourceConnection : sourceConnections) {
+      sourceConnection.close();
     }
-
-    private static void initConnectionPool()
-    {
-        var poolSize = PropertiesUtil.get(POOL_SIZE_KEY);
-        var size = poolSize == null ? DEFAULT_POOL_SIZE : Integer.parseInt(poolSize);
-        pool = new ArrayBlockingQueue<>(size);
-        sourceConnections = new ArrayList<>(size);
-
-        for (int i = 0; i < size; i++) {
-            var connection = open();
-
-            var proxyConnection = (Connection) Proxy.newProxyInstance(
-                ConnectionPool.class.getClassLoader(),
-                new Class[]{Connection.class},
-                (proxy, method, args) ->
-                     method.getName().equals("close")
-                        ? pool.add((Connection) proxy)
-                        : method.invoke(connection, args)
-            );
-            pool.add(proxyConnection);
-            sourceConnections.add(connection);
-        }
-    }
-
-    @SneakyThrows
-    public static Connection get()
-    {
-        return pool.poll(1, TimeUnit.SECONDS);
-    }
-
-    @SneakyThrows
-    private static Connection open() {
-        return DriverManager.getConnection(
-            PropertiesUtil.get(URL_KEY),
-            PropertiesUtil.get(USER_KEY),
-            PropertiesUtil.get(PASSWORD_KEY));
-    }
-
-    @SneakyThrows
-    public static void close()
-    {
-        for (Connection sourceConnection : sourceConnections) {
-            sourceConnection.close();
-        }
-    }
+  }
 }

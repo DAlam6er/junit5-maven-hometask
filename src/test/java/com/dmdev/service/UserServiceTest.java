@@ -26,58 +26,55 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
-public class UserServiceTest
-{
-    @Mock
-    private CreateUserValidator createUserValidator;
-    @Mock
-    private UserDao userDao;
-    @Mock
-    private CreateUserMapper createUserMapper;
-    @Mock
-    private UserMapper userMapper;
-    @InjectMocks
-    private UserService userService;
+class UserServiceTest {
+  @Mock
+  private CreateUserValidator createUserValidator;
+  @Mock
+  private UserDao userDao;
+  @Mock
+  private CreateUserMapper createUserMapper;
+  @Mock
+  private UserMapper userMapper;
+  @InjectMocks
+  private UserService userService;
 
-    @Test
-    void shouldCallDaoAndConvertEntityOnLogin()
-    {
-        UserDto expectedUserDto = UserDto.builder().build();
+  @Test
+  void shouldCallDaoAndConvertEntityOnLogin() {
+    UserDto expectedUserDto = UserDto.builder().build();
 
-        doReturn(expectedUserDto).when(userMapper).map(IVAN);
-        doReturn(Optional.of(IVAN)).when(userDao).findByEmailAndPassword(IVAN.getEmail(), IVAN.getPassword());
+    doReturn(expectedUserDto).when(userMapper).map(IVAN);
+    doReturn(Optional.of(IVAN)).when(userDao).findByEmailAndPassword(IVAN.getEmail(), IVAN.getPassword());
 
-        var actualResult = userService.login(IVAN.getEmail(), IVAN.getPassword());
+    var actualResult = userService.login(IVAN.getEmail(), IVAN.getPassword());
 
-        assertThat(actualResult).isPresent();
-        assertSame(expectedUserDto, actualResult.get());
-        verify(userDao).findByEmailAndPassword(IVAN.getEmail(), IVAN.getPassword());
-        verify(userMapper).map(IVAN);
-    }
+    assertThat(actualResult).isPresent();
+    assertSame(expectedUserDto, actualResult.get());
+    verify(userDao).findByEmailAndPassword(IVAN.getEmail(), IVAN.getPassword());
+    verify(userMapper).map(IVAN);
+  }
 
-    @Test
-    void shouldValidateInputAndConvertSavedEntity()
-    {
-        var createUserDto = CreateUserDto.builder().build();
-        var expectedResult = UserDto.builder().build();
-        doReturn(new ValidationResult()).when(createUserValidator).validate(createUserDto);
-        doReturn(expectedResult).when(userMapper).map(any());
+  @Test
+  void shouldValidateInputAndConvertSavedEntity() {
+    var createUserDto = CreateUserDto.builder().build();
+    var expectedResult = UserDto.builder().build();
+    doReturn(new ValidationResult()).when(createUserValidator).validate(createUserDto);
+    doReturn(expectedResult).when(userMapper).map(any());
 
-        var actualResult = userService.create(createUserDto);
+    var actualResult = userService.create(createUserDto);
 
-        assertSame(actualResult, expectedResult);
-        verify(createUserValidator).validate(createUserDto);
-        verify(createUserMapper).map(createUserDto);
-        verify(userDao).save(any());
-    }
+    assertSame(actualResult, expectedResult);
+    verify(createUserValidator).validate(createUserDto);
+    verify(createUserMapper).map(createUserDto);
+    verify(userDao).save(any());
+  }
 
-    @Test
-    void shouldThrowValidationExceptionWhenValidationFails() {
-        var createUserDto = CreateUserDto.builder().build();
+  @Test
+  void shouldThrowValidationExceptionWhenValidationFails() {
+    var createUserDto = CreateUserDto.builder().build();
 
-        var validationResult = new ValidationResult();
-        validationResult.add(Error.of("invalid.data", "Invalid data"));
-        doReturn(validationResult).when(createUserValidator).validate(createUserDto);
-        assertThrows(ValidationException.class, () -> userService.create(createUserDto));
-    }
+    var validationResult = new ValidationResult();
+    validationResult.add(Error.of("invalid.data", "Invalid data"));
+    doReturn(validationResult).when(createUserValidator).validate(createUserDto);
+    assertThrows(ValidationException.class, () -> userService.create(createUserDto));
+  }
 }

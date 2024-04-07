@@ -8,34 +8,34 @@ import org.junit.jupiter.api.Test;
 
 import java.time.LocalDate;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertAll;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertSame;
 
-public class UserMapperTest
-{
-    private final UserMapper mapper = UserMapper.getInstance();
+class UserMapperTest {
+  private final UserMapper mapper = UserMapper.getInstance();
 
-    @Test
-    void shouldMapAllFieldsCorrectly()
-    {
-        User user = User.builder()
-            .id(1)
-            .name("Test")
-            .birthday(LocalDate.of(2000, 5, 18))
-            .email("test@gmail.com")
-            .password("pass")
-            .gender(Gender.MALE)
-            .role(Role.USER)
-            .build();
+  @Test
+  void shouldMapAllFieldsCorrectly() {
+    User user = User.builder()
+        .id(1)
+        .name("Test")
+        .birthday(LocalDate.of(2000, 5, 18))
+        .email("test@gmail.com")
+        .password("pass")
+        .gender(Gender.MALE)
+        .role(Role.USER)
+        .build();
 
-        UserDto actualResult = mapper.map(user);
+    UserDto actualResult = mapper.map(user);
 
-        assertAll(
-            () -> assertEquals(user.getId(), actualResult.getId()),
-            () -> assertEquals(user.getName(), actualResult.getName()),
-            () -> assertEquals(user.getBirthday(), actualResult.getBirthday()),
-            () -> assertEquals(user.getEmail(), actualResult.getEmail()),
-            () -> assertSame(user.getGender(), actualResult.getGender()),
-            () -> assertSame(user.getRole(), actualResult.getRole())
-        );
-    }
+    assertAll(
+        () -> assertEquals(user.getId(), actualResult.getId()),
+        () -> assertEquals(user.getName(), actualResult.getName()),
+        () -> assertEquals(user.getBirthday(), actualResult.getBirthday()),
+        () -> assertEquals(user.getEmail(), actualResult.getEmail()),
+        () -> assertSame(user.getGender(), actualResult.getGender()),
+        () -> assertSame(user.getRole(), actualResult.getRole())
+    );
+  }
 }

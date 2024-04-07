@@ -8,33 +8,33 @@ import org.junit.jupiter.api.Test;
 
 import java.time.LocalDate;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertAll;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertSame;
 
-public class CreateUserMapperTest
-{
-    private final CreateUserMapper mapper = CreateUserMapper.getInstance();
+class CreateUserMapperTest {
+  private final CreateUserMapper mapper = CreateUserMapper.getInstance();
 
-    @Test
-    void shouldMapAllFieldsCorrectly()
-    {
-        CreateUserDto dto = CreateUserDto.builder()
-            .name("Test")
-            .birthday("2000-01-02")
-            .email("test@gmail.com")
-            .password("pass")
-            .gender(Gender.MALE.name())
-            .role(Role.USER.name())
-            .build();
+  @Test
+  void shouldMapAllFieldsCorrectly() {
+    CreateUserDto dto = CreateUserDto.builder()
+        .name("Test")
+        .birthday("2000-01-02")
+        .email("test@gmail.com")
+        .password("pass")
+        .gender(Gender.MALE.name())
+        .role(Role.USER.name())
+        .build();
 
-        User actualResult = mapper.map(dto);
+    User actualResult = mapper.map(dto);
 
-        assertAll(
-            () -> assertEquals(dto.getName(), actualResult.getName()),
-            () -> assertEquals(LocalDate.of(2000, 1, 2), actualResult.getBirthday()),
-            () -> assertEquals(dto.getEmail(), actualResult.getEmail()),
-            () -> assertEquals(dto.getPassword(), actualResult.getPassword()),
-            () -> assertSame(Gender.valueOf(dto.getGender()), actualResult.getGender()),
-            () -> assertSame(Role.valueOf(dto.getRole()), actualResult.getRole())
-        );
-    }
+    assertAll(
+        () -> assertEquals(dto.getName(), actualResult.getName()),
+        () -> assertEquals(LocalDate.of(2000, 1, 2), actualResult.getBirthday()),
+        () -> assertEquals(dto.getEmail(), actualResult.getEmail()),
+        () -> assertEquals(dto.getPassword(), actualResult.getPassword()),
+        () -> assertSame(Gender.valueOf(dto.getGender()), actualResult.getGender()),
+        () -> assertSame(Role.valueOf(dto.getRole()), actualResult.getRole())
+    );
+  }
 }

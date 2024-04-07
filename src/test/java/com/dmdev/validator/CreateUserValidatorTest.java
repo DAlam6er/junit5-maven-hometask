@@ -14,67 +14,61 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class CreateUserValidatorTest
-{
-    private final CreateUserValidator validator = CreateUserValidator.getInstance();
+class CreateUserValidatorTest {
+  private final CreateUserValidator validator = CreateUserValidator.getInstance();
 
-    @ParameterizedTest
-    @MethodSource("getValidationErrorArguments")
-    void checkEachValidationError(String birthday, String role, String gender, String expectedErrorCode)
-    {
-        CreateUserDto dto = CreateUserDto.builder()
-            .birthday(birthday)
-            .role(role)
-            .gender(gender)
-            .build();
+  /**
+   * @return arguments: birthday, role, gender, expected error code
+   */
+  private static Stream<Arguments> getValidationErrorArguments() {
+    return Stream.of(
+        Arguments.of("09-25-2000", Role.ADMIN.name(), Gender.FEMALE.name(), "invalid.birthday"),
+        Arguments.of("2000-09-25", Role.ADMIN.name(), "dummy", "invalid.gender"),
+        Arguments.of("2000-09-25", "dummy", Gender.MALE.name(), "invalid.role")
+    );
+  }
 
-        ValidationResult validationResult = validator.validate(dto);
-        assertFalse(validationResult.isValid());
-        assertThat(validationResult.getErrors()).hasSize(1);
-        assertThat(validationResult.getErrors().get(0).getCode()).isEqualTo(expectedErrorCode);
-    }
+  @ParameterizedTest
+  @MethodSource("getValidationErrorArguments")
+  void checkEachValidationError(String birthday, String role, String gender, String expectedErrorCode) {
+    CreateUserDto dto = CreateUserDto.builder()
+        .birthday(birthday)
+        .role(role)
+        .gender(gender)
+        .build();
 
-    @Test
-    void shouldReturnValidResultIObjectIsValid()
-    {
-        CreateUserDto dto = CreateUserDto.builder()
-            .birthday("2000-09-25")
-            .role(Role.ADMIN.name())
-            .gender(Gender.FEMALE.name())
-            .build();
+    ValidationResult validationResult = validator.validate(dto);
+    assertFalse(validationResult.isValid());
+    assertThat(validationResult.getErrors()).hasSize(1);
+    assertThat(validationResult.getErrors().get(0).getCode()).isEqualTo(expectedErrorCode);
+  }
 
-        ValidationResult validationResult = validator.validate(dto);
+  @Test
+  void shouldReturnValidResultIObjectIsValid() {
+    CreateUserDto dto = CreateUserDto.builder()
+        .birthday("2000-09-25")
+        .role(Role.ADMIN.name())
+        .gender(Gender.FEMALE.name())
+        .build();
 
-        assertTrue(validationResult.isValid());
-        assertThat(validationResult.getErrors()).isEmpty();
-    }
+    ValidationResult validationResult = validator.validate(dto);
 
-    @Test
-    void shouldCombineAllValidationErrors()
-    {
-        CreateUserDto dto = CreateUserDto.builder()
-            .birthday("09-25-2000")
-            .role("dummy")
-            .gender("dummy")
-            .build();
+    assertTrue(validationResult.isValid());
+    assertThat(validationResult.getErrors()).isEmpty();
+  }
 
-        ValidationResult validationResult = validator.validate(dto);
+  @Test
+  void shouldCombineAllValidationErrors() {
+    CreateUserDto dto = CreateUserDto.builder()
+        .birthday("09-25-2000")
+        .role("dummy")
+        .gender("dummy")
+        .build();
 
-        assertFalse(validationResult.isValid());
-        assertThat(validationResult.getErrors().stream().map(Error::getCode))
-            .contains("invalid.birthday", "invalid.gender", "invalid.role");
-    }
+    ValidationResult validationResult = validator.validate(dto);
 
-    /**
-     *
-     * @return arguments: birthday, role, gender, expected error code
-     */
-    private static Stream<Arguments> getValidationErrorArguments()
-    {
-        return Stream.of(
-            Arguments.of("09-25-2000", Role.ADMIN.name(), Gender.FEMALE.name(), "invalid.birthday"),
-            Arguments.of("2000-09-25", Role.ADMIN.name(), "dummy", "invalid.gender"),
-            Arguments.of("2000-09-25", "dummy", Gender.MALE.name(), "invalid.role")
-        );
-    }
+    assertFalse(validationResult.isValid());
+    assertThat(validationResult.getErrors().stream().map(Error::getCode))
+        .contains("invalid.birthday", "invalid.gender", "invalid.role");
+  }
 }

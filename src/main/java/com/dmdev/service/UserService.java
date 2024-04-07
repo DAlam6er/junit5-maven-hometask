@@ -21,29 +21,26 @@ import java.util.Optional;
  * По вышеописанным причинам произошел рефакторинг UserService
  */
 @RequiredArgsConstructor
-public class UserService
-{
-    private final CreateUserValidator createUserValidator;
-    private final UserDao userDao;
-    private final CreateUserMapper createUserMapper;
-    private final UserMapper userMapper;
+public class UserService {
+  private final CreateUserValidator createUserValidator;
+  private final UserDao userDao;
+  private final CreateUserMapper createUserMapper;
+  private final UserMapper userMapper;
 
-    public Optional<UserDto> login(String email, String password)
-    {
-        return userDao.findByEmailAndPassword(email, password)
-            .map(userMapper::map);
+  public Optional<UserDto> login(String email, String password) {
+    return userDao.findByEmailAndPassword(email, password)
+        .map(userMapper::map);
+  }
+
+  @SneakyThrows
+  public UserDto create(CreateUserDto userDto) {
+    var validationResult = createUserValidator.validate(userDto);
+    if (!validationResult.isValid()) {
+      throw new ValidationException(validationResult.getErrors());
     }
+    var userEntity = createUserMapper.map(userDto);
+    userDao.save(userEntity);
 
-    @SneakyThrows
-    public UserDto create(CreateUserDto userDto)
-    {
-        var validationResult = createUserValidator.validate(userDto);
-        if (!validationResult.isValid()) {
-            throw new ValidationException(validationResult.getErrors());
-        }
-        var userEntity = createUserMapper.map(userDto);
-        userDao.save(userEntity);
-
-        return userMapper.map(userEntity);
-    }
+    return userMapper.map(userEntity);
+  }
 }
