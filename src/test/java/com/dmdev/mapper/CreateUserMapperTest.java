@@ -28,13 +28,23 @@ class CreateUserMapperTest {
 
     User actualResult = mapper.map(dto);
 
+    User expectedResult = User.builder()
+        .name("Test")
+        .birthday(LocalDate.of(2000, 1, 2))
+        .email("test@gmail.com")
+        .password("pass")
+        .gender(Gender.MALE)
+        .role(Role.USER)
+        .build();
+
     assertAll(
         () -> assertEquals(dto.getName(), actualResult.getName()),
         () -> assertEquals(LocalDate.of(2000, 1, 2), actualResult.getBirthday()),
         () -> assertEquals(dto.getEmail(), actualResult.getEmail()),
         () -> assertEquals(dto.getPassword(), actualResult.getPassword()),
         () -> assertSame(Gender.valueOf(dto.getGender()), actualResult.getGender()),
-        () -> assertSame(Role.valueOf(dto.getRole()), actualResult.getRole())
+        () -> assertSame(Role.valueOf(dto.getRole()), actualResult.getRole()),
+        () -> assertEquals(expectedResult, actualResult)
     );
   }
 }

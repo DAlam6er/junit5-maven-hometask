@@ -12,10 +12,14 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.stream.Stream;
 
 import static com.dmdev.integration.util.TestObjectUtils.IVAN;
+import static com.dmdev.integration.util.TestObjectUtils.KATE;
 import static com.dmdev.integration.util.TestObjectUtils.PETR;
+import static com.dmdev.integration.util.TestObjectUtils.SVETA;
+import static com.dmdev.integration.util.TestObjectUtils.VLAD;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -33,29 +37,21 @@ class UserDaoIT extends IntegrationTestBase {
    */
   private final UserDao userDao = UserDao.getInstance();
 
-  /**
-   * @return arguments: email, password, expected error code
-   */
-  private static Stream<Arguments> getArgumentsToFind() {
-    return Stream.of(
-        Arguments.of("dummy", PETR.getPassword()),
-        Arguments.of(PETR.getEmail(), "dummy"),
-        Arguments.of("dummy", "dummy")
-    );
-  }
-
   @Test
   void shouldFindAllUsers() {
-    //assertThat(userDao.findAll()).hasSize(5);
-    assertThat(userDao.findAll()).hasSize(TestObjectUtils.getRowsNumber());
+    var expectedResult = List.of(IVAN, PETR, SVETA, VLAD, KATE);
+    var actualResult = userDao.findAll();
+    assertThat(actualResult).hasSize(expectedResult.size());
+    assertThat(actualResult).isEqualTo(expectedResult);
   }
 
   @Test
   void shouldFindExistingEntity() {
     var actualResult = userDao.findById(IVAN.getId());
+    var actualId = actualResult.orElseGet(User::new).getId();
     assertAll(
         () -> assertThat(actualResult).isPresent(),
-        () -> assertEquals(IVAN.getId(), actualResult.orElseGet(User::new).getId())
+        () -> assertEquals(IVAN.getId(), actualId)
     );
   }
 
@@ -76,24 +72,19 @@ class UserDaoIT extends IntegrationTestBase {
         .gender(Gender.MALE)
         .build();
 
-//        int rowsNumber = TestObjectUtils.getRowsNumber();
-
     userDao.save(user);
     assertAll(
         () -> assertNotNull(user.getId()),
         () -> assertEquals(user, userDao.findById(user.getId()).orElseGet(User::new))
-//            () -> assertThat(userDao.save(NIKOLAY)).isEqualTo(NIKOLAY),
-//            () -> assertThat(TestObjectUtils.getRowsNumber()).isEqualTo(rowsNumber + 1)
     );
   }
 
   @Test
   void shouldFindExistingUserByEmailAndPassword() {
-    var actualResult = userDao.findByEmailAndPassword
-        (PETR.getEmail(), PETR.getPassword());
+    var actualResult = userDao.findByEmailAndPassword(PETR.getEmail(), PETR.getPassword());
     assertAll(
         () -> assertThat(actualResult).isPresent(),
-        () -> assertEquals(PETR.getEmail(), actualResult.orElseGet(User::new).getEmail())
+        () -> assertThat(actualResult.get()).isEqualTo(PETR)
     );
   }
 
@@ -102,6 +93,17 @@ class UserDaoIT extends IntegrationTestBase {
   void shouldNotFindUserWithWrongEmailOrPassword(String email, String password) {
     var actualResult = userDao.findByEmailAndPassword(email, password);
     assertThat(actualResult).isEmpty();
+  }
+
+  /**
+   * @return arguments: email, password, expected error code
+   */
+  private static Stream<Arguments> getArgumentsToFind() {
+    return Stream.of(
+        Arguments.of("dummy", PETR.getPassword()),
+        Arguments.of(PETR.getEmail(), "dummy"),
+        Arguments.of("dummy", "dummy")
+    );
   }
 
   @Test

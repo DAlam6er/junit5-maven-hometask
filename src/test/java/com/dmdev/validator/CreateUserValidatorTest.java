@@ -17,6 +17,20 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class CreateUserValidatorTest {
   private final CreateUserValidator validator = CreateUserValidator.getInstance();
 
+  @Test
+  void shouldReturnValidResultIObjectIsValid() {
+    CreateUserDto dto = CreateUserDto.builder()
+        .birthday("2000-09-25")
+        .role(Role.ADMIN.name())
+        .gender(Gender.FEMALE.name())
+        .build();
+
+    ValidationResult validationResult = validator.validate(dto);
+
+    assertTrue(validationResult.isValid());
+    assertThat(validationResult.getErrors()).isEmpty();
+  }
+
   /**
    * @return arguments: birthday, role, gender, expected error code
    */
@@ -41,20 +55,6 @@ class CreateUserValidatorTest {
     assertFalse(validationResult.isValid());
     assertThat(validationResult.getErrors()).hasSize(1);
     assertThat(validationResult.getErrors().get(0).getCode()).isEqualTo(expectedErrorCode);
-  }
-
-  @Test
-  void shouldReturnValidResultIObjectIsValid() {
-    CreateUserDto dto = CreateUserDto.builder()
-        .birthday("2000-09-25")
-        .role(Role.ADMIN.name())
-        .gender(Gender.FEMALE.name())
-        .build();
-
-    ValidationResult validationResult = validator.validate(dto);
-
-    assertTrue(validationResult.isValid());
-    assertThat(validationResult.getErrors()).isEmpty();
   }
 
   @Test

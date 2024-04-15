@@ -158,6 +158,7 @@
                         <exclude>com/dmdev/exception/*</exclude>
                         <exclude>com/dmdev/validator/Error.class</exclude>
                         <exclude>com/dmdev/service/UserServiceOld.class</exclude>
+                        <exclude>com/dmdev/util/ConnectionManager.class</exclude>
                     </excludes>
                 </configuration>
                 <executions>

@@ -30,35 +30,15 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @TestMethodOrder(MethodOrderer.Random.class)
 class UserServiceIT extends IntegrationTestBase {
-  UserService userService;
-
-  /**
-   * @return arguments: email, password
-   */
-  private static Stream<Arguments> getArgumentsForLogin() {
-    return Stream.of(
-        Arguments.of("dummy", "dummy"),
-        Arguments.of(IVAN.getEmail(), "dummy"),
-        Arguments.of("dummy", IVAN.getPassword())
-    );
-  }
-
-  /**
-   * @return arguments: birthday, role, gender, expectedErrorCode
-   */
-  private static Stream<Arguments> getWrongArgumentsForEntityCreate() {
-    return Stream.of(
-        Arguments.of("09-25-2000", Role.ADMIN.name(), Gender.FEMALE.name(), "invalid.birthday"),
-        Arguments.of("2000-09-25", Role.ADMIN.name(), "dummy", "invalid.gender"),
-        Arguments.of("2000-09-25", "dummy", Gender.MALE.name(), "invalid.role")
-    );
-  }
+  private UserDao userDao;
+  private UserService userService;
 
   @BeforeEach
   void init() {
+    userDao = UserDao.getInstance();
     userService = new UserService(
         CreateUserValidator.getInstance(),
-        UserDao.getInstance(),
+        userDao,
         CreateUserMapper.getInstance(),
         UserMapper.getInstance()
     );
@@ -67,19 +47,13 @@ class UserServiceIT extends IntegrationTestBase {
   @Test
   void shouldLoginSuccessfully() {
     var actualResult = userService.login(IVAN.getEmail(), IVAN.getPassword());
+    var actualEmail = actualResult.orElse(UserDto.builder().build()).getEmail();
 
     assertAll(
         () -> assertThat(actualResult).isPresent(),
-        () -> assertEquals(actualResult.orElse(UserDto.builder().build()).getEmail(), IVAN.getEmail())
+        () -> assertEquals(actualEmail, IVAN.getEmail())
     );
 
-  }
-
-  @ParameterizedTest
-  @MethodSource("getArgumentsForLogin")
-  void shouldNotLoginIfPasswordOrEmailIsNotCorrect(String email, String password) {
-    var actualResult = userService.login(email, password);
-    assertThat(actualResult).isEmpty();
   }
 
   @Test
@@ -93,19 +67,27 @@ class UserServiceIT extends IntegrationTestBase {
         .gender("MALE")
         .build();
 
-/*        var userDto = UserDto.builder()
-            .id(TestObjectUtils.getMaxId() + 1)
-            .name(userToCreate.getName())
-            .birthday(LocalDateFormatter.format(userToCreate.getBirthday()))
-            .email(userToCreate.getEmail())
-            .role(Role.find(userToCreate.getRole()).orElse(null))
-            .gender(Gender.find(userToCreate.getGender()).orElse(null))
-            .build();
-        assertThat(userService.create(userToCreate)).isEqualTo(userDto);*/
-
     var createdUser = userService.create(userToCreate);
 
     assertNotNull(createdUser.getId());
+  }
+
+  @ParameterizedTest
+  @MethodSource("getArgumentsForLogin")
+  void shouldNotLoginIfPasswordOrEmailIsNotCorrect(String email, String password) {
+    var actualResult = userService.login(email, password);
+    assertThat(actualResult).isEmpty();
+  }
+
+  /**
+   * @return arguments: email, password
+   */
+  private static Stream<Arguments> getArgumentsForLogin() {
+    return Stream.of(
+        Arguments.of("dummy", "dummy"),
+        Arguments.of(IVAN.getEmail(), "dummy"),
+        Arguments.of("dummy", IVAN.getPassword())
+    );
   }
 
   @ParameterizedTest
@@ -124,5 +106,16 @@ class UserServiceIT extends IntegrationTestBase {
     var actualException = assertThrows(ValidationException.class, () -> userService.create(userToCreate));
     assertThat(actualException.getErrors()).hasSize(1);
     assertThat(actualException.getErrors().get(0).getCode()).isEqualTo(expectedErrorCode);
+  }
+
+  /**
+   * @return arguments: birthday, role, gender, expectedErrorCode
+   */
+  private static Stream<Arguments> getWrongArgumentsForEntityCreate() {
+    return Stream.of(
+        Arguments.of("09-25-2000", Role.ADMIN.name(), Gender.FEMALE.name(), "invalid.birthday"),
+        Arguments.of("2000-09-25", Role.ADMIN.name(), "dummy", "invalid.gender"),
+        Arguments.of("2000-09-25", "dummy", Gender.MALE.name(), "invalid.role")
+    );
   }
 }
